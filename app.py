@@ -5,9 +5,11 @@ import yt_dlp
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route("/")
 def home():
-    return "Backend Running"
+    return "Backend Running Successfully"
+
 
 @app.route("/download", methods=["POST"])
 def download():
@@ -15,6 +17,13 @@ def download():
     try:
 
         data = request.get_json()
+
+        if not data or "url" not in data:
+            return jsonify({
+                "success": False,
+                "error": "URL is required"
+            })
+
         url = data.get("url")
 
         ydl_opts = {
@@ -31,64 +40,58 @@ def download():
         media_list = []
 
         # Carousel Post
-        if "entries" in info:
+        if "entries" in info and info["entries"]:
 
             for item in info["entries"]:
 
+                media_url = (
+                    item.get("url")
+                    or item.get("webpage_url")
+                    or item.get("original_url")
+                )
+
                 media_list.append({
-
-                    "media_url":
-                    item.get("url"),
-
-                    "thumbnail":
-                    item.get("thumbnail"),
-
+                    "media_url": media_url,
+                    "thumbnail": item.get("thumbnail"),
                     "type":
-                    "image"
-                    if item.get("ext")
-                       in ["jpg", "jpeg", "png"]
-
-                    else "video",
+                        "image"
+                        if item.get("ext") in ["jpg", "jpeg", "png"]
+                        else "video",
                 })
 
-        # Single Media
+        # Single Post / Reel
         else:
 
+            media_url = (
+                info.get("url")
+                or info.get("webpage_url")
+                or info.get("original_url")
+            )
+
             media_list.append({
-
-                "media_url":
-                info.get("url"),
-
-                "thumbnail":
-                info.get("thumbnail"),
-
+                "media_url": media_url,
+                "thumbnail": info.get("thumbnail"),
                 "type":
-                "image"
-                if info.get("ext")
-                   in ["jpg", "jpeg", "png"]
-
-                else "video",
+                    "image"
+                    if info.get("ext") in ["jpg", "jpeg", "png"]
+                    else "video",
             })
 
         return jsonify({
-
             "success": True,
-
             "media": media_list,
         })
 
     except Exception as e:
 
         return jsonify({
-
             "success": False,
-
             "error": str(e),
         })
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True,
     )
