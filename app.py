@@ -29,6 +29,7 @@ def download():
         ydl_opts = {
             "quiet": True,
             "noplaylist": True,
+            "format": "best[ext=mp4]",
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
